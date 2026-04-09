@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import requests
 import os
+from pathlib import Path
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.neural_network import MLPRegressor
@@ -16,6 +17,10 @@ warnings.filterwarnings("ignore")
 
 API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", "GMURP7PRCNKS4VRQ")
 SYMBOL = "AAPL"
+
+PROJECT_DIR = Path(__file__).resolve().parent
+OUTPUTS_DIR = PROJECT_DIR / "outputs"
+MODELS_DIR = PROJECT_DIR / "models"
 
 try:
     from tensorflow.keras.layers import LSTM, Dense  # type: ignore[reportMissingImports]
@@ -194,11 +199,12 @@ def train_and_predict(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
     model_summary["Best_Model_By_MAE"] = model_summary["MAE"] == model_summary["MAE"].min()
 
     # Persist models for reuse
-    joblib.dump(model_rf, "rf_model.joblib")
-    joblib.dump(model_xgb, "xgb_model.joblib")
-    joblib.dump(scaler, "feature_scaler.joblib")
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    joblib.dump(model_rf, MODELS_DIR / "rf_model.joblib")
+    joblib.dump(model_xgb, MODELS_DIR / "xgb_model.joblib")
+    joblib.dump(scaler, MODELS_DIR / "feature_scaler.joblib")
     if TF_AVAILABLE and model_lstm is not None:
-        model_lstm.save("lstm_model.keras")
+        model_lstm.save(MODELS_DIR / "lstm_model.keras")
 
     return {
         "results": results,
@@ -210,26 +216,27 @@ def train_and_predict(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
 
 
 def main() -> None:
+    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
     raw_df = fetch_stock_data(SYMBOL)
     df = build_features(raw_df)
 
     # This is the history table requested for Power BI
-    df.to_csv("historical_data.csv", index=True)
+    df.to_csv(OUTPUTS_DIR / "historical_data.csv", index=True)
 
     outputs = train_and_predict(df)
-    outputs["results"].to_csv("predictions.csv", index=False)
-    outputs["metrics"].to_csv("model_metrics.csv", index=False)
-    outputs["feature_importance"].to_csv("feature_importance.csv", index=False)
-    outputs["predictions_long"].to_csv("predictions_long.csv", index=False)
-    outputs["model_summary"].to_csv("model_summary.csv", index=False)
+    outputs["results"].to_csv(OUTPUTS_DIR / "predictions.csv", index=False)
+    outputs["metrics"].to_csv(OUTPUTS_DIR / "model_metrics.csv", index=False)
+    outputs["feature_importance"].to_csv(OUTPUTS_DIR / "feature_importance.csv", index=False)
+    outputs["predictions_long"].to_csv(OUTPUTS_DIR / "predictions_long.csv", index=False)
+    outputs["model_summary"].to_csv(OUTPUTS_DIR / "model_summary.csv", index=False)
 
     print("Generated files:")
-    print("- historical_data.csv")
-    print("- predictions.csv")
-    print("- model_metrics.csv")
-    print("- feature_importance.csv")
-    print("- predictions_long.csv")
-    print("- model_summary.csv")
+    print(f"- {OUTPUTS_DIR / 'historical_data.csv'}")
+    print(f"- {OUTPUTS_DIR / 'predictions.csv'}")
+    print(f"- {OUTPUTS_DIR / 'model_metrics.csv'}")
+    print(f"- {OUTPUTS_DIR / 'feature_importance.csv'}")
+    print(f"- {OUTPUTS_DIR / 'predictions_long.csv'}")
+    print(f"- {OUTPUTS_DIR / 'model_summary.csv'}")
     print("\nModel metrics:")
     print(outputs["metrics"])
 

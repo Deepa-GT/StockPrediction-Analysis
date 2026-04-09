@@ -1,38 +1,68 @@
-# Stock ML + Power BI Dashboard
+# Stock ML + Power BI Dashboard (Analyst-Grade)
 
-This project is a standalone prototype (no Django) that trains 3 ML models and builds a clean, interactive, portfolio-ready Power BI dashboard.
+Standalone ML + BI prototype (no Django) that:
+- **pulls historical stock prices**
+- **engineers technical features**
+- **trains LSTM / Random Forest / XGBoost regressors**
+- **exports model predictions + metrics to CSV**
+- **builds an interactive Power BI report**
 
-## Project Output Files
+## Quickstart
 
-Run:
+1. Create a virtual environment (recommended).
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Set your API key (recommended):
+
+- Windows PowerShell:
+
+```powershell
+$env:ALPHAVANTAGE_API_KEY="YOUR_KEY"
+```
+
+4. Run:
 
 ```bash
 python stock_prediction_ml.py
 ```
 
-Generated files:
-- `historical_data.csv` - engineered historical stock features
-- `predictions.csv` - wide prediction output (Actual + all model predictions)
-- `model_metrics.csv` - RMSE and MAE by model
-- `feature_importance.csv` - Random Forest feature importance
-- `predictions_long.csv` - long format for model slicers and line visuals
-- `model_summary.csv` - KPI-friendly summary table
+## Outputs
 
-## Power BI: Data Load
+### CSVs for Power BI
+All CSVs are written into `outputs/`:
+- `outputs/historical_data.csv` - engineered historical features
+- `outputs/predictions.csv` - wide prediction output (Actual + all model predictions)
+- `outputs/predictions_long.csv` - long format (recommended for visuals + slicers)
+- `outputs/model_metrics.csv` - RMSE and MAE by model
+- `outputs/model_summary.csv` - KPI-friendly summary table
+- `outputs/feature_importance.csv` - feature importance (RF)
+
+### Saved models
+Models/scaler are written into `models/` (not required for Power BI visuals):
+- `models/rf_model.joblib`
+- `models/xgb_model.joblib`
+- `models/feature_scaler.joblib`
+- `models/lstm_model.keras` (if TensorFlow is available)
+
+## Power BI: Data Load (Recommended)
 
 1. Open Power BI Desktop.
 2. Select **Get Data > Text/CSV**.
 3. Load:
-   - `historical_data.csv`
-   - `predictions_long.csv`
-   - `model_summary.csv`
-   - `feature_importance.csv`
+   - `outputs/predictions_long.csv`
+   - `outputs/model_summary.csv`
+   - `outputs/feature_importance.csv`
+   - `outputs/historical_data.csv` (optional)
 4. In Power Query:
    - Ensure `Date` is type **Date** for `historical_data` and `predictions_long`.
    - Ensure numeric columns are Decimal/Whole Number.
 5. Close & Apply.
 
-## Data Model (Simple and Reliable)
+## Data Model (Simple + Reliable)
 
 Use `predictions_long` as your primary visual table.
 
@@ -138,3 +168,7 @@ Keep whitespace generous and avoid visual clutter.
 - Add page tooltips for model explanations.
 - Add a decomposition tree for error analysis by date periods.
 - Use Python visual for custom residual/error distribution charts.
+
+## Notes (Professional / Reproducible)
+- Alpha Vantage free tier can throttle requests. The script automatically falls back to `yfinance` if throttled.
+- `Forecast Signal` is a directional indicator (Predicted vs Actual) meant for demo/analysis, not financial advice.

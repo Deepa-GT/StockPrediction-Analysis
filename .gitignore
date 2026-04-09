@@ -23,3 +23,6 @@ Thumbs.db
 *.keras
 *.joblib
 
+# Generated folders (reproducible; optional to commit outputs)
+models/
+
